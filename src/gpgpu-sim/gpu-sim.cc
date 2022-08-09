@@ -694,6 +694,25 @@ void gpgpu_sim_config::reg_options(option_parser_t opp) {
       opp, "-gpgpu_ptx_sim_mode", OPT_INT32,
       &(gpgpu_ctx->func_sim->g_ptx_sim_mode),
       "Select between Performance (default) or Functional simulation (1)", "0");
+
+  // Xuesi:
+  // parsing parameters related to per cluster frequency scaling
+  option_parser_register(opp, "-gpgpu_per_cluster_freq_scaling_enabled", OPT_BOOL.
+                         &g_per_cluster_freq_scaling_enabled,
+                         "Turn on per cluster frequency scaling (1=On, 0=Off)", "0");
+
+  option_parser_register(opp, "-gpgpu_cluster_freq_array", OPT_CSTR.
+                         &g_cluster_freq_array,
+                         "frequencies for each cluster in MHz {<Core 1 clock>: ... : <Core N clock>}",
+                         "1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 :" 
+                        "1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 :" 
+                        "1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 :"
+                        "1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 :"
+                        "1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 :" 
+                        "1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 :" 
+                        "1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 :" 
+                        "1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0 : 1600.0");
+
   option_parser_register(opp, "-gpgpu_clock_domains", OPT_CSTR,
                          &gpgpu_clock_domains,
                          "Clock Domain Frequencies in MhZ {<Core Clock>:<ICNT "
@@ -1040,6 +1059,26 @@ enum divergence_support_t gpgpu_sim::simd_model() const {
 }
 
 void gpgpu_sim_config::init_clock_domains(void) {
+  // Xuesi: read in core frequencies for clusters if per core frequency scaling in enabled
+  // DELETE: for debugging purposes
+  printf("inside the function gpgpu_sim_config::init_clock_domains");
+  if (g_per_cluster_freq_scaling_enabled == 1) {
+    // DELETE: for debugging purposes
+    printf("per cluster frequency scaling is enabled");
+    cluster_freq_array = new double[m_shader_config.n_simt_clusters];
+    static const char *inputFormat[2] = {"%lf", ":%lf"};
+    for (int i = 0; i < m_shader_config.n_simt_clusters; i++) {
+      sscanf(g_cluster_freq_array, inputFormat[i > 0], cluster_freq_array[i]);
+    }
+
+    // DELETE: for debugging purposes
+    for (int i = 0; i < m_shader_config.n_simt_clusters; i++) {
+    printf("The freqeuncy for cluster %d is %lf", i, cluster_freq_array[i]);
+    }
+  }
+
+  
+
   sscanf(gpgpu_clock_domains, "%lf:%lf:%lf:%lf", &core_freq, &icnt_freq,
          &l2_freq, &dram_freq);
   core_freq = core_freq MhZ;

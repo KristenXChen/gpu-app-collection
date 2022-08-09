@@ -409,8 +409,10 @@ class gpgpu_sim_config : public power_config,
   }
 
   bool flush_l1() const { return gpgpu_flush_l1_cache; }
+  bool per_cluster_freq_scaling() const {return g_per_cluster_freq_scaling_enabled; }
 
  private:
+  std::string generate_core_freq_parsing_string(std::string currStr, unsigned int repetition);
   void init_clock_domains(void);
 
   // backward pointer
@@ -441,6 +443,12 @@ class gpgpu_sim_config : public power_config,
   int gpgpu_cflog_interval;
   char *gpgpu_clock_domains;
   unsigned max_concurrent_kernel;
+
+  // Xuesi:
+  // parameters for per cluster frequency scaling support
+  bool g_per_cluster_freq_scaling_enabled;
+  char* g_cluster_freq_array;
+  double* cluster_freq_array;
 
   // visualizer
   bool g_visualizer_enabled;
